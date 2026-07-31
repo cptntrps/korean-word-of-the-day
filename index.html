@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>Korean Word of the Day</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+/* Ported verbatim from the approved "Resting Screen" design (Modernist design system:
+   flat, architectural, Archivo, mono red, visible grid, ZERO corner radius, 2px rules,
+   flush-left labels). Token values, type scale, spacing and rules are the design's — do
+   not "tidy" them into round numbers.
+
+   FONT FALLBACKS matter here: the target is an Echo Show 8 on LineageOS 18.1, which ships
+   NotoSansCJK locally (verified on device). If Google Fonts is unreachable the Hangul still
+   renders from the system CJK font instead of tofu boxes, and Latin falls back to system
+   sans — degraded typography, never an unreadable screen. */
+:root{
+  --bg:#f3f2f2; --fg:#201e1d; --muted:#605d5d; --acc:#ae1800;
+  --rule:rgba(32,30,29,0.4); --dim:rgba(32,30,29,0.13);
+}
+html[data-mode="night"]{
+  --bg:#2d2b2b; --fg:#f3f2f2; --muted:#bab6b6; --acc:#ff563c;
+  --rule:rgba(243,242,242,0.45); --dim:rgba(243,242,242,0.15);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+body{
+  /* the screen is ambient: never let a stray tap select text or pop a callout */
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
+  transition:background 240ms linear;
+}
+/* SCALE-TO-FIT STAGE. The design is authored at exactly 1280x800 and every size in it is
+   absolute, so the layout must never reflow — it must SCALE. On the Echo the real web
+   viewport is smaller than the panel (Jelly's toolbar + the Android status/nav bars take
+   ~180px), and a fixed 1280x800 body simply overflowed: the definition column and "MEANS"
+   were cut off the right edge. Scaling keeps the approved composition pixel-exact at
+   whatever viewport it is handed, here or on any other screen later. */
+#stage{
+  width:1280px;height:800px;
+  transform-origin:top left;
+  position:absolute;top:0;left:0;
+  color:var(--fg);
+  font-family:Archivo,system-ui,-apple-system,"Roboto",sans-serif;
+  background:var(--bg);
+  display:flex;flex-direction:column;padding:30px 44px 26px;
+  transition:background 240ms linear,color 240ms linear;
+}
+.ko{font-family:"Noto Sans KR","Noto Sans CJK KR","Noto Sans CJK",sans-serif}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.hdr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:center;
+     padding-bottom:12px;border-bottom:2px solid var(--rule)}
+.hdr-title{font-size:23px;font-weight:800;letter-spacing:-0.01em;text-transform:uppercase}
+.hdr-meta{font-size:23px;font-weight:400;color:var(--muted)}
+.hdr-btns{display:flex;justify-content:flex-end;gap:12px}
+button{
+  font-family:Archivo,system-ui,sans-serif;font-weight:800;font-size:19px;
+  letter-spacing:0.08em;text-transform:uppercase;text-align:left;  /* flush left — Modernist */
+  min-height:48px;padding:0 18px;cursor:pointer;border-radius:0;background:transparent;
+}
+.btn-view{border:2px solid var(--rule);color:var(--fg)}
+.btn-mode{border:2px solid var(--acc);color:var(--acc)}
+.btn-view:active{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+.btn-mode:active{background:var(--acc);color:var(--bg)}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ── word view ──────────────────────────────────────────────────────────── */
+.view{display:none;flex-direction:column;flex:1;min-height:0}
+.view.on{display:flex}
+.w-top{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;
+       padding:28px 0 24px;border-bottom:2px solid var(--rule)}
+.w-hero{grid-column:span 2;display:flex;flex-direction:column;gap:10px;min-width:0}
+#hero{font-weight:900;line-height:0.92;letter-spacing:-0.02em;white-space:nowrap}
+#roman{font-size:52px;font-weight:800;letter-spacing:-0.01em;color:var(--acc)}
+.w-def{display:flex;flex-direction:column;justify-content:flex-end;gap:10px;min-width:0}
+.label{font-size:22px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+#meaning{font-size:34px;font-weight:400;line-height:1.25}
+.w-bot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding-top:24px;flex:1;min-height:0}
+.w-syl{display:flex;flex-direction:column;gap:14px;min-width:0}
+#syl{display:flex;gap:22px;flex-wrap:wrap}
+#syl .s{display:flex;flex-direction:column;gap:4px}
+#syl .s b{font-weight:700;font-size:44px;line-height:1}
+#syl .s i{font-style:normal;font-size:24px;color:var(--acc)}
+.w-use{grid-column:span 2;display:flex;flex-direction:column;gap:14px;
+       border-left:2px solid var(--rule);padding-left:24px;min-width:0}
+#exKo{font-weight:500;font-size:34px;line-height:1.3}
+#exEn{font-size:24px;color:var(--muted)}
+/* "the sound" — the learner-facing pronunciation, distinct from the romanization */
+#sound{font-size:24px;color:var(--muted);letter-spacing:0.02em}
+
+/* ── clock view ─────────────────────────────────────────────────────────── */
+.c-grid{flex:1;display:grid;grid-template-columns:repeat(11,1fr);grid-template-rows:repeat(8,1fr);
+        font-weight:700;font-size:44px;line-height:1;place-items:center;min-height:0}
+.c-grid span{color:var(--dim);transition:color 320ms linear}
+.c-grid span[data-lit="1"]{color:var(--acc)}
+.c-foot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:end;
+        padding-top:16px;border-top:2px solid var(--rule)}
+#spokenKo{font-weight:700;font-size:30px;color:var(--acc)}
+#spokenRoman{font-size:24px;color:var(--muted)}
+.c-today{display:flex;gap:12px;align-items:baseline}
+#todayKo{font-weight:900;font-size:34px}
+#todayRoman{font-size:24px;font-weight:800;color:var(--acc)}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<div class="hdr">
+  <div class="hdr-title" id="hdrTitle">Korean word of the day</div>
+  <div class="hdr-meta" id="hdrMeta"></div>
+  <div class="hdr-btns">
+    <button class="btn-view" id="btnView" type="button">Clock</button>
+    <button class="btn-mode" id="btnMode" type="button">Dark</button>
+  </div>
+</div>
+
+<!-- word view -->
+<div class="view on" id="viewWord">
+  <div class="w-top">
+    <div class="w-hero">
+      <div class="ko" id="hero"></div>
+      <div id="roman"></div>
+    </div>
+    <div class="w-def">
+      <div class="label" id="posLabel">Means</div>
+      <div id="meaning"></div>
+    </div>
+  </div>
+  <div class="w-bot">
+    <div class="w-syl">
+      <div class="label">Syllables</div>
+      <div class="ko" id="syl"></div>
+      <div id="sound"></div>
+    </div>
+    <div class="w-use">
+      <div class="label">In use</div>
+      <div class="ko" id="exKo"></div>
+      <div id="exEn"></div>
+    </div>
+  </div>
+</div>
+
+<!-- clock view -->
+<div class="view" id="viewClock">
+  <div class="c-grid ko" id="grid"></div>
+  <div class="c-foot">
+    <div class="ko" id="spokenKo"></div>
+    <div id="spokenRoman"></div>
+    <div class="c-today">
+      <span class="label">Today</span>
+      <span class="ko" id="todayKo"></span>
+      <span id="todayRoman"></span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#stage -->
+
+<script src="./words.js"></script>
+<script>
+"use strict";
+
+/* ── kiosk: scale-to-fit + fullscreen ────────────────────────────────────────
+   Two separate problems, deliberately solved separately:
+
+   1. SCALE. The design is absolute at 1280x800. Whatever viewport the browser hands us
+      (Jelly's toolbar and the Android bars shrink it), fit the stage inside it and centre
+      the remainder. Never reflow — the composition is the approved artefact.
+
+   2. CHROME. Requesting the Fullscreen API is what actually removes Jelly's own toolbar;
+      `immersive.full` (set on the device) only removes the Android status/nav bars. Most
+      browsers demand a user gesture, so try on load, and retry on the first touch/visibility
+      change. A failure is silent by design: a slightly smaller resting screen is fine, a
+      broken one is not. */
+function fit(){
+  const s = document.getElementById("stage");
+  const k = Math.min(window.innerWidth / 1280, window.innerHeight / 800);
+  s.style.transform = "scale(" + k + ")";
+  // centre the letterboxed remainder so the frame never hugs one edge
+  s.style.left = Math.max(0, (window.innerWidth  - 1280 * k) / 2) + "px";
+  s.style.top  = Math.max(0, (window.innerHeight -  800 * k) / 2) + "px";
+}
+window.addEventListener("resize", fit);
+window.addEventListener("orientationchange", fit);
+
+function goFullscreen(){
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen;
+  if (!req || document.fullscreenElement || document.webkitFullscreenElement) return;
+  try { const p = req.call(el); if (p && p.catch) p.catch(() => {}); } catch (e) { /* no gesture yet */ }
+}
+document.addEventListener("fullscreenchange", fit);
+document.addEventListener("webkitfullscreenchange", fit);
+// any touch anywhere is a valid gesture — the toggles call this too via the capture phase
+document.addEventListener("touchend", goFullscreen, true);
+document.addEventListener("click", goFullscreen, true);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { goFullscreen(); fit(); } });
+
+/* ── word clock: grid + lighting, carried over from the design ───────────── */
+const ROWS = [
+  ["지","금","무","오","전","라","오","후","나","밤","도"],
+  ["한","두","세","네","다","섯","여","섯","일","곱","마"],
+  ["아","홉","열","한","열","두","여","덟","가","나","라"],
+  ["시","정","각","오","십","오","무","라","나","가","도"],
+  ["이","십","오","삼","십","오","라","나","가","무","도"],
+  ["사","십","오","분","나","가","라","무","도","마","하"],
+  ["마","시","나","도","가","라","무","세","파","하","두"],
+  ["오","나","라","사","무","가","도","마","시","나","라"],
+];
+const CELLS = {
+  "지금":["r1c1","r1c2"], "오전":["r1c4","r1c5"], "오후":["r1c7","r1c8"],
+  "한":["r2c1"], "두":["r2c2"], "세":["r2c3"], "네":["r2c4"],
+  "다섯":["r2c5","r2c6"], "여섯":["r2c7","r2c8"], "일곱":["r2c9","r2c10"],
+  "아홉":["r3c1","r3c2"], "열":["r3c3"], "열한":["r3c3","r3c4"],
+  "열두":["r3c5","r3c6"], "여덟":["r3c7","r3c8"],
+  "시":["r4c1"], "정각":["r4c2","r4c3"],
+  "오":["r4c4"], "십":["r4c5"], "오십":["r4c4","r4c5"],
+  "십오":["r4c5","r4c6"], "오십오":["r4c4","r4c5","r4c6"],
+  "이십":["r5c1","r5c2"], "이십오":["r5c1","r5c2","r5c3"],
+  "삼십":["r5c4","r5c5"], "삼십오":["r5c4","r5c5","r5c6"],
+  "사십":["r6c1","r6c2"], "사십오":["r6c1","r6c2","r6c3"], "분":["r6c4"],
+};
+const HOURS = [
+  ["열두","yeoldu"],["한","han"],["두","du"],["세","se"],["네","ne"],["다섯","daseot"],
+  ["여섯","yeoseot"],["일곱","ilgop"],["여덟","yeodeol"],["아홉","ahop"],["열","yeol"],["열한","yeolhan"],
+];
+const MINUTES = {
+  5:["오","o"], 10:["십","sip"], 15:["십오","sibo"], 20:["이십","isip"], 25:["이십오","isibo"],
+  30:["삼십","samsip"], 35:["삼십오","samsibo"], 40:["사십","sasip"], 45:["사십오","sasibo"],
+  50:["오십","osip"], 55:["오십오","osibo"],
+};
+
+const cellEls = {};
+(function buildGrid(){
+  const g = document.getElementById("grid");
+  ROWS.forEach((row, r) => row.forEach((ch, c) => {
+    const el = document.createElement("span");
+    el.textContent = ch;
+    const id = "r" + (r + 1) + "c" + (c + 1);
+    el.dataset.cell = id;
+    cellEls[id] = el;
+    g.appendChild(el);
+  }));
+})();
+
+/* ── word of the day: deterministic daily rotation ───────────────────────
+   Index from the LOCAL calendar date, not Date.now()/86400000 — the latter is UTC and
+   would flip the word mid-evening here. No API, no tokens, no network: the screen is
+   correct even when the host is busy or the WAN is down. */
+/* Rebindable, not const: the bank is RE-READ when words.js is re-fetched (see refreshBank
+   below), so a screen that has been up for weeks still gets today's pin. */
+let WORDS = [];
+let PINS = {};
+function readBank(){
+  WORDS = Array.isArray(window.KOREAN_WORDS) ? window.KOREAN_WORDS : [];
+  PINS = (window.KOREAN_PINS && typeof window.KOREAN_PINS === "object") ? window.KOREAN_PINS : {};
+}
+readBank();
+function dayIndex(d){
+  const days = Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  return ((days % WORDS.length) + WORDS.length) % WORDS.length;
+}
+/* Local calendar date as YYYY-MM-DD — the pin key. Built from the local getters for the
+   same reason dayIndex is: toISOString() is UTC and would turn the pin over mid-evening. */
+function localISO(d){
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+/* A pin wins over the rotation for its one date. Returns [dedupeKey, word] — the key is
+   a string so a pin day and a rotation day can never collide in the lastWordKey check. */
+function wordFor(d){
+  const iso = localISO(d);
+  const pinned = PINS[iso];
+  if (pinned) return ["pin:" + iso, pinned];
+  const i = dayIndex(d);
+  return ["day:" + i, WORDS[i]];
+}
+/* The hero line is nowrap inside a 2/3-width cell; long words must shrink rather than
+   overflow the frame. Sizes chosen to keep the design's optical weight at each length. */
+function heroSize(n){ return n <= 2 ? 180 : n === 3 ? 160 : n === 4 ? 128 : n === 5 ? 104 : 88; }
+
+let view = "word";
+let mode = "day";
+let lastWordKey = null;
+
+function renderWord(now){
+  if (!WORDS.length) {
+    document.getElementById("meaning").textContent = "words.js failed to load — no word bank";
+    return;
+  }
+  const [key, w] = wordFor(now);
+  if (key === lastWordKey) return;          // only touch the DOM when the day actually turns
+  lastWordKey = key;
+
+  const hero = document.getElementById("hero");
+  hero.textContent = w.ko;
+  hero.style.fontSize = heroSize([...w.ko].length) + "px";
+  document.getElementById("roman").textContent = w.roman;
+  document.getElementById("posLabel").textContent = "Means · " + w.pos;
+  document.getElementById("meaning").textContent = w.meaning;
+  document.getElementById("sound").textContent = "sounds like  " + w.sound;
+
+  const syl = document.getElementById("syl");
+  syl.textContent = "";
+  w.syl.forEach(([k, r]) => {
+    const d = document.createElement("div"); d.className = "s";
+    const b = document.createElement("b"); b.textContent = k;
+    const i = document.createElement("i"); i.textContent = r;
+    d.appendChild(b); d.appendChild(i); syl.appendChild(d);
+  });
+
+  document.getElementById("exKo").textContent = w.ex[0];
+  document.getElementById("exEn").textContent = w.ex[1];
+  document.getElementById("todayKo").textContent = w.ko;
+  document.getElementById("todayRoman").textContent = w.roman;
+}
+
+function renderClock(now){
+  const h24 = now.getHours();
+  const step = Math.floor(now.getMinutes() / 5) * 5;
+  const pm = h24 >= 12;
+  const hour = HOURS[h24 % 12];
+  const minute = MINUTES[step];
+
+  const words = ["지금", pm ? "오후" : "오전", hour[0], "시"];
+  if (minute) { words.push(minute[0], "분"); } else { words.push("정각"); }
+
+  const lit = new Set();
+  words.forEach(w => (CELLS[w] || []).forEach(id => lit.add(id)));
+  for (const id in cellEls) {
+    if (lit.has(id)) cellEls[id].dataset.lit = "1";
+    else delete cellEls[id].dataset.lit;
+  }
+
+  const period = pm ? ["오후","ohu"] : ["오전","ojeon"];
+  document.getElementById("spokenKo").textContent = minute
+    ? `지금 ${period[0]} ${hour[0]} 시 ${minute[0]} 분`
+    : `지금 ${period[0]} ${hour[0]} 시 정각`;
+  document.getElementById("spokenRoman").textContent = minute
+    ? `jigeum ${period[1]} ${hour[1]} si ${minute[1]} bun`
+    : `jigeum ${period[1]} ${hour[1]} si jeonggak`;
+}
+
+const pad = n => String(n).padStart(2, "0");
+function render(){
+  const now = new Date();
+  renderWord(now);
+  renderClock(now);
+  const dateLabel = new Intl.DateTimeFormat("en-GB",
+    { weekday:"long", day:"numeric", month:"long" }).format(now);
+  document.getElementById("hdrTitle").textContent =
+    view === "word" ? "Korean word of the day" : "Korean word clock";
+  document.getElementById("hdrMeta").textContent =
+    view === "word" ? dateLabel : `${dateLabel} · ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  document.getElementById("btnView").textContent = view === "word" ? "Clock" : "Word";
+  document.getElementById("btnMode").textContent = mode === "day" ? "Dark" : "Light";
+  document.getElementById("viewWord").classList.toggle("on", view === "word");
+  document.getElementById("viewClock").classList.toggle("on", view === "clock");
+  document.documentElement.dataset.mode = mode;
+}
+
+/* Choices survive a browser restart — the Echo relaunches this page unattended, and a
+   resting screen that forgets it was in dark mode overnight is a bug, not a refresh. */
+try {
+  view = localStorage.getItem("kwotd.view") || view;
+  mode = localStorage.getItem("kwotd.mode") || mode;
+} catch (e) { /* private mode / storage disabled: defaults are fine, never fail the screen */ }
+
+document.getElementById("btnView").addEventListener("click", () => {
+  view = view === "word" ? "clock" : "word";
+  try { localStorage.setItem("kwotd.view", view); } catch (e) {}
+  render();
+});
+document.getElementById("btnMode").addEventListener("click", () => {
+  mode = mode === "day" ? "night" : "day";
+  try { localStorage.setItem("kwotd.mode", mode); } catch (e) {}
+  render();
+});
+
+fit();
+goFullscreen();               // may be refused until the first touch; retried on gesture
+render();
+setInterval(render, 15000);   // design's cadence: 5-minute clock steps, 15s is ample
+setInterval(fit, 5000);
+/* ── content refresh (owner-visible defect, 2026-07-30) ──────────────────────────────
+   A resting screen runs for weeks. Rotation already survives midnight — renderWord
+   recomputes from the local date every tick — but the BANK ITSELF is whatever words.js was
+   at page load, so a date pin added today never reaches a screen that loaded yesterday.
+   That is not hypothetical: today's pin was on the server and the panel kept showing the
+   rotation word until it was reloaded by hand over adb.
+
+   RE-FETCH THE BANK, DO NOT RELOAD THE PAGE. location.reload() would also work, but a
+   navigation drops the Fullscreen API grant, and the panel would then sit showing browser
+   chrome until somebody physically walks over and taps it — trading a stale word for a
+   broken frame. Re-injecting the script re-runs exactly the two global assignments the
+   original <script> tag made: no navigation, no flicker, fullscreen intact.
+
+   A failed fetch is deliberately a NO-OP. The screen keeps the last good bank and tries
+   again next tick, which is correct for an ambient display on a flaky network — the
+   alternative is a blank panel. This is a documented exception to fail-loudly, not a
+   swallowed error: the publish path that ships words.js carries its own loud parity and
+   edge checks, so a real distribution failure is caught there, where it can be acted on. */
+function refreshBank(){
+  const s = document.createElement("script");
+  s.src = "./words.js?t=" + Date.now();   // cache-buster: panel browsers cache statics hard
+  s.onload = () => {
+    s.remove();
+    readBank();
+    lastWordKey = null;                               // force a repaint — the day key can be unchanged while the CONTENT changed
+    render();
+  };
+  s.onerror = () => s.remove();
+  document.head.appendChild(s);
+}
+setInterval(refreshBank, 300000);         // 5 min: a pin edited now is on the wall within 5       // Jelly's toolbar can auto-hide/appear; re-fit rather than assume
+</script>
+</body>
+</html>

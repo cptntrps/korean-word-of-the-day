@@ -1,0 +1,16 @@
+name: test
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # No install step and no dependencies on purpose: the suite uses only node's
+      # built-in assert + vm, so there is nothing to resolve and nothing to cache.
+      - run: node tests/test_korean_pin.js
