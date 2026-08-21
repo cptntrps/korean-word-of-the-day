@@ -1,5 +1,8 @@
 # Korean Word of the Day
 
+> **Documentation:** `docs/` carries the generated six-doc set (scope, architecture, workflows, data, quality, internals) — read it before reading code. Do not edit; it regenerates nightly.
+
+
 A resting screen for a wall panel, tablet, or spare monitor: one Korean word a day, plus a
 Korean **word clock** that spells the time the way Koreans actually say it.
 
