@@ -3,10 +3,10 @@ repo: korean-word-of-the-day
 program: UNKNOWN
 version: 0.1.0
 doc: 6_INTERNALS
-generated_at: 2026-08-28T04:21:40Z
-source_head: 12a327b37a96615306550c79a1e17a30e53e2bb7
-facts_sha256: 841228e67761fe60ed54ea369526d57e9d8d80d9ec799cebe2cb6907661027c1
-body_sha256: 2008c796648055169fc2b369c79a7c99d055f37e6c0e9a4f7f8124cd1a95e8d9
+generated_at: 2026-08-29T04:24:52Z
+source_head: 9d2129f2eb0439160d826c71228f5ca24eb857cb
+facts_sha256: 68db751e7d2a0c48cddf25dfc38d765e81d46bc886ecd95049bcdc7ece003605
+body_sha256: 015023f6801521e907c0154656544fb6ebb05ae3ab291644aaf0ce196f8fd6a3
 pipeline_version: 0.2.0
 mode: draft
 status: pass
@@ -19,10 +19,7 @@ critic_score: 8
 # korean-word-of-the-day — Internals
 
 > [!warning]
-> One question: **what are the exact mechanisms?** Reader: an agent debugging or
-> extending the deep layer. This file is FORMATTED from introspection, never
-> interpreted — where the fact sheet lacks a detail, `UNKNOWN (fact not
-> harvested)` beats a guess. Assume SCOPE_AND_PURPOSE is already read.
+> Reader: an agent debugging or extending the deep layer. This file is FORMATTED from introspection, never interpreted — where the fact sheet lacks a detail, `UNKNOWN (fact not harvested)` beats a guess. Assume SCOPE_AND_PURPOSE is already read.
 
 ## Migrations
 
@@ -34,23 +31,23 @@ N/A: repo owns no database objects.
 
 ## Triggers & guarantees
 
-N/A: repo owns no database objects.
+- **deterministic rotation** — word selection by local calendar date never changes for a given date; no API, tokens, or network involved (words.js:16).
+- **day-one pin** — index 0 is `설레다`, so day one matches the approved mockup exactly (words.js:17).
+- **shape-complete entries** — every word object carries `ko`, `roman`, `sound`, `pos`, `meaning`, `syl`, and `ex`, so the screen can never render blank panels (words.js:23).
 
 ## Decision semantics
 
-### Word rotation
+### Word-of-the-day selection
 
-The word-of-the-day selection is deterministic by date, with no API, tokens, or network. (words.js:16)
+Inputs: local calendar date. Verdict: a word object from `window.KOREAN_WORDS` (words.js:22). Rotation is deterministic by date with no API, tokens, or network (words.js:16). Index 0 is `설레다`, so day one matches the approved mockup exactly (words.js:17).
 
-Inputs: local calendar date → output: index into the word bank.
+### Sound vs romanization canonicalisation
 
-Index 0 is `설레다` so day one matches the approved mockup exactly. (words.js:17)
-
-The word bank contains 20 entries total, from `설레다` to `편안하다`. (words.js:118)
+Inputs: `roman` field. Verdict: `sound` field. The `sound` field is deliberately not the same string as `roman`, as RR is a transliteration not a pronunciation guide (words.js:7).
 
 ## Constants that matter
 
 | name | value | consequence |
 |---|---|---|
-| word bank size | 20 | rotation cycles through 20 entries, index 0 is `설레다` (words.js:118) |
-| first word index | 0 | day one renders `설레다` exactly as the approved mockup (words.js:17) |
+| `window.KOREAN_WORDS` index 0 | `설레다` | day one matches the approved mockup exactly (words.js:17) |
+| word object fields | `ko`, `roman`, `sound`, `pos`, `meaning`, `syl`, `ex` | every entry is shape-complete, so the screen can never render blank panels (words.js:23) |
