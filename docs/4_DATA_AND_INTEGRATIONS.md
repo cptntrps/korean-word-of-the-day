@@ -3,10 +3,10 @@ repo: korean-word-of-the-day
 program: UNKNOWN
 version: 0.1.0
 doc: 4_DATA_AND_INTEGRATIONS
-generated_at: 2026-08-28T04:21:23Z
-source_head: 12a327b37a96615306550c79a1e17a30e53e2bb7
-facts_sha256: 841228e67761fe60ed54ea369526d57e9d8d80d9ec799cebe2cb6907661027c1
-body_sha256: f7ac4c6a622a079807fafb789668c4be3bba00a1bfd89d525c9a2773d3d9861a
+generated_at: 2026-08-29T04:24:35Z
+source_head: 9d2129f2eb0439160d826c71228f5ca24eb857cb
+facts_sha256: 68db751e7d2a0c48cddf25dfc38d765e81d46bc886ecd95049bcdc7ece003605
+body_sha256: 0dc00f15edfa207ef3d39a99624d3e1b48cf445dc33432b4ba76a375de9dbd30
 pipeline_version: 0.2.0
 mode: draft
 status: pass
@@ -18,27 +18,25 @@ critic_score: 8
 
 # korean-word-of-the-day — static word bank and word clock, no data layer
 
-> [!warning] **Documentation:** `docs/` carries the generated six-doc set (scope, architecture, workflows, data, quality, internals) — read it before reading code. Do not edit; it regenerates nightly.
-
-A resting screen for a wall panel, tablet, or spare monitor: one Korean word a day, plus a Korean word clock. Two static files, no build step, no API, no keys, no network calls. Open `index.html` and it works.
-
-The word bank is stored in a global `window.KOREAN_WORDS` array in `words.js`. Rotation of words is deterministic by date, with no API, tokens, or network. Index 0 is 설레다 so day one matches the approved mockup exactly.
-
 ## Data owned
 
 | name | kind | database/location | purpose | migration filename |
 |---|---|---|---|---|
-| `window.KOREAN_WORDS` | file | `words.js` | word bank of 20 entries, from 설레다 to 편안하다 | N/A |
+| `window.KOREAN_WORDS` | file (in-memory array) | `words.js` | word bank of 20 Korean words, each with `ko`, `roman`, `sound`, `pos`, `meaning`, `syl`, and `ex` fields | N/A |
 
-Each word entry has a `ko` field for Hangul, the hero glyph line; a `roman` field for Revised Romanization of the whole word; a `sound` field deliberately different from `roman` to show pronunciation; a `pos` field for part of speech, shown after 'Means ·'; a `meaning` field for the definition line; a `syl` field with per-syllable `[hangul, roman]` pairs for the 'Syllables' block; and an `ex` field with `[korean, english]` example sentences for the 'In use' block.
+The word bank is the only data object this repo creates. It is a static JavaScript array embedded in `words.js`, not a database table or view.
 
 ## Data read
 
-N/A: the repo reads no external data — no API, tokens, or network.
+| name | kind | database/location | purpose | migration filename |
+|---|---|---|---|---|
+| `index.html` | file | repo root | entry point that loads `words.js` and renders the word of the day and word clock | N/A |
+
+The repo reads no external data. Rotation is deterministic by local calendar date with no API, tokens, or network.
 
 ## Access
 
-N/A: no database, role, or credential store — the word bank is a static in-browser array.
+No database, role, or grant exists. No secrets are stored or retrieved. The process is a static file opened directly in a browser.
 
 ## Env keys
 
@@ -46,8 +44,8 @@ N/A: no environment keys are defined or read.
 
 ## External integrations
 
-N/A: no external systems — no APIs, devices, or other services are contacted.
+N/A: no external systems. The repo makes no network calls and depends on no APIs, devices, or other services.
 
 ## Consumers
 
-N/A: the fact sheet evidences no consumer of this repo's data or API. The word bank data shape mirrors exactly what the Resting Screen design renders, but no consumer claim is present in the fact sheet.
+N/A: the fact sheet provides no evidence of any consumer of this repo's data or API. The word bank is rendered by `index.html` in the same repo, but no external consumer is documented.
