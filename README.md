@@ -1,13 +1,33 @@
 # Korean Word of the Day
 
-> **Documentation:** `docs/` carries the generated six-doc set (scope, architecture, workflows, data, quality, internals) — read it before reading code. Do not edit; it regenerates nightly.
-
-
 A resting screen for a wall panel, tablet, or spare monitor: one Korean word a day, plus a
 Korean **word clock** that spells the time the way Koreans actually say it.
 
 Two static files. No build step, no API, no keys, no network calls, no tracking. Open
 `index.html` and it works — including with the internet down.
+
+[Live site](https://cptntrps.github.io/korean-word-of-the-day/) ·
+[Documentation](docs/README.md) ·
+[Contributing](.github/CONTRIBUTING.md) ·
+[Security reporting](.github/SECURITY.md)
+
+## Repository layout
+
+```text
+.github/    Contribution and security guidance; existing GitHub Actions workflow
+docs/       Documentation index and six generated reference documents
+tests/      Existing date-pin tests
+index.html  Static page
+words.js    Word data
+VERSION     Project version
+LICENSE     MIT license
+```
+
+The six numbered documents in `docs/` regenerate nightly; read the
+[documentation index](docs/README.md) before editing them. Maintainer:
+[@cptntrps](https://github.com/cptntrps). Use
+[issues](https://github.com/cptntrps/korean-word-of-the-day/issues) for public
+questions and suggestions; use private reporting for security concerns.
 
 ## The two views
 
@@ -21,7 +41,8 @@ native Korean numerals for hours, Sino-Korean for minutes, the way the time is a
 ## Run it
 
 Open `index.html` in any browser. That's the whole deployment. For a kiosk, point the
-kiosk browser at the file (or at this repo's GitHub Pages URL) at 1280×800 or similar.
+kiosk browser at the file (or at the [live site](https://cptntrps.github.io/korean-word-of-the-day/))
+at 1280×800 or similar.
 
 ## Test
 
@@ -35,4 +56,4 @@ never render blank panels.
 
 ## License
 
-MIT.
+[MIT](LICENSE).
