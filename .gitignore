@@ -1,0 +1,11 @@
+# Local environment files; keep placeholder-only templates trackable.
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Operating-system files and local Node tooling dependencies.
+.DS_Store
+Thumbs.db
+node_modules/
